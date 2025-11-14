@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import ec.edu.uisek.githubclient.databinding.ActivityMainBinding
+import ec.edu.uisek.githubclient.services.RetrofitClient
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -24,4 +25,6 @@ class MainActivity : AppCompatActivity() {
 
 
     }
+
+
 }
