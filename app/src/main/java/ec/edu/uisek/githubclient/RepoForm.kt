@@ -59,7 +59,21 @@ class RepoForm : AppCompatActivity() {
 
         call.enqueue(object : Callback<Repo> {
             override fun onResponse(call: Call<Repo?>, response: Response<Repo?>) {
-                TODO("Not yet implemented")
+                if (response.isSuccessful) {
+                    Log.d("RepoForm", "El repositorio ${repoName} se creó exitosamente")
+                    showMessage("El repositorio ${repoName} se creó exitosamente")
+                    finish()
+                } else {
+                    val errorMsg = when (response.code()) {
+                        401 -> "No autorizado"
+                        403 -> "Prohibido"
+                        404 -> "No encontrado"
+                        else -> "Error: ${response.code()}"
+                    }
+                    Log.e("RepoForm", "Error: $errorMsg")
+                    showMessage(msg = "Error: $errorMsg")
+                }
+
             }
 
             override fun onFailure(call: Call<Repo?>, t: Throwable) {

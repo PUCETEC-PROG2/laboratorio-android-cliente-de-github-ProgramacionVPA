@@ -26,9 +26,15 @@ class MainActivity : AppCompatActivity() {
         binding.newRepoFab.setOnClickListener {
             displayNewRepoForm()
         }
+
+    }
+
+    override fun onResume() {
+        super.onResume()
         setupRecyclerView()
         fetchRepositories()
     }
+
 
     private fun setupRecyclerView() {
         binding.repoRecyclerView.adapter = reposAdapter
