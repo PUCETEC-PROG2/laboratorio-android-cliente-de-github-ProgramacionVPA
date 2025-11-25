@@ -15,26 +15,27 @@ import retrofit2.Response
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
-    private val reposAdapter = ReposAdapter()
+    // Inicializamos el adapter pasando las funciones lambda para editar y eliminar
+    private val reposAdapter = ReposAdapter(
+        onEditClick = { repo -> onEditRepo(repo) },
+        onDeleteClick = { repo -> onDeleteRepo(repo) }
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         binding.newRepoFab.setOnClickListener {
             displayNewRepoForm()
         }
-
+        setupRecyclerView()
     }
 
     override fun onResume() {
         super.onResume()
-        setupRecyclerView()
         fetchRepositories()
     }
-
 
     private fun setupRecyclerView() {
         binding.repoRecyclerView.adapter = reposAdapter
@@ -48,9 +49,10 @@ class MainActivity : AppCompatActivity() {
             override fun onResponse(call: Call<List<Repo>>, response: Response<List<Repo>>) {
                 if (response.isSuccessful) {
                     val repos = response.body()
-                    if (repos != null && repos.isNotEmpty()) {
+                    if (repos != null) { // Quitamos isNotEmpty() para que limpie la lista si se borran todos
                         reposAdapter.updateRepositories(repos)
                     } else {
+                        reposAdapter.updateRepositories(emptyList())
                         showMessage(msg = "Usted no tiene repositorios")
                     }
                 } else {
@@ -68,6 +70,36 @@ class MainActivity : AppCompatActivity() {
             override fun onFailure(call: Call<List<Repo>>, t: Throwable) {
                 showMessage(msg = "Error: Error de Conexión")
                 Log.e("MainActivity", "Error: ${t.message}")
+            }
+        })
+    }
+
+    private fun onEditRepo(repo: Repo) {
+        val intent = Intent(this, RepoForm::class.java).apply {
+            putExtra("repo_name", repo.name)
+            putExtra("repo_description", repo.description)
+            putExtra("repo_owner", repo.owner.login)
+            putExtra("is_edit_mode", true)
+        }
+        startActivity(intent)
+    }
+
+    private fun onDeleteRepo(repo: Repo) {
+        val apiService = RetrofitClient.gitHubApiService
+        val call = apiService.deleteRepository(repo.owner.login, repo.name)
+
+        call.enqueue(object : Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                if (response.isSuccessful) {
+                    showMessage("Repositorio ${repo.name} eliminado")
+                    fetchRepositories() // Refrescar lista
+                } else {
+                    showMessage("Error al eliminar: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                showMessage("Error de conexión al eliminar")
             }
         })
     }
